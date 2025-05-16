@@ -1,0 +1,82 @@
+# ==== SYSTEM FILES ====
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ==== NODE ====
+node_modules/
+dist/
+build/
+npm-debug.log*
+yarn-debug.log*
+pnpm-debug.log*
+
+# Vite
+.vite/
+coverage/
+**/coverage/
+# ==== ENV / CONFIG / SECRETS ====
+**/.env
+**/.env.*
+*.env
+*.env.*
+*.local
+*.secret
+*.key
+*.pem
+*.crt
+*.pfx
+
+# Docker
+**/secrets/
+docker-compose.override.yml
+**/secrets/
+docker-compose.override.yml
+pg_data/
+meili_data/
+**/data/
+**/backup/
+**/dump/
+
+# ==== LOGS / TEMP ====
+*.log
+*.tmp
+*.bak
+*.swp
+*.swo
+
+# ==== FRONTEND / REACT ====
+frontend/node_modules/
+frontend/dist/
+
+# ==== BACKEND / GO ====
+*.exe
+*.out
+*.test
+*.log
+/vendor/
+/bin/
+/build/
+
+# ==== DATABASE / SEARCH ENGINES ====
+*.sql.*
+*.pgdump
+*.sqlite
+*.sqlite3
+
+
+
+# ==== OS-SPECIFIC ====
+ehthumbs.db
+Icon?
+.Trashes
+.Spotlight-V100
+.fseventsd
+
+# ==== IDEs / EDITORS ====
+.vscode/
+.idea/
+*.code-workspace
+
+# ==== MONOREPOS ====
+.pnpm-store/

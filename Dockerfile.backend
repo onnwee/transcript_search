@@ -1,0 +1,10 @@
+# Dockerfile.backend
+FROM node:20
+
+WORKDIR /app
+COPY ingest/package*.json ./
+RUN npm install
+COPY ingest .
+
+CMD ["sh", "-c", "node setupMeili.js"]
+

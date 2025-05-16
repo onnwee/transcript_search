@@ -1,0 +1,17 @@
+# Never diff env/secret files
+*.env            filter=crypt diff=hidden merge=union
+*.env.*          filter=crypt diff=hidden merge=union
+*.key            filter=crypt diff=hidden merge=union
+*.pem            filter=crypt diff=hidden merge=union
+*.crt            filter=crypt diff=hidden merge=union
+*.pfx            filter=crypt diff=hidden merge=union
+*.sql            diff=hidden
+*.pgdump         diff=hidden
+*.sqlite*        diff=hidden
+
+# Normalize line endings
+* text=auto
+
+# Treat shell files as shell
+*.sh linguist-language=Shell
+*.bash linguist-language=Shell
