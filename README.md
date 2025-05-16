@@ -8,7 +8,8 @@ A full-stack application for ingesting, formatting, and searching YouTube video 
 
 - ✅ **Fetch from YouTube** using `youtube-transcript`
 - 🧐 **No AI Required**: Uses lightweight NLP for punctuation & formatting
-- 🧹 **Twitch-Savvy Cleaner**: Preserves emotes, chat lingo, and streamer slang
+- 🤖 **Still Loads an AI container**: LMAO
+- 🧹 **Cleaner**: Doesn't really work great right now
 - 🔍 **Fast Fuzzy Search** powered by Meilisearch
 - 🚧 **Containerized** with Docker Compose for isolated services
 - ⚖️ **PostgreSQL Storage** of full transcript and segment-level access
