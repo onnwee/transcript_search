@@ -2,64 +2,61 @@ import he from 'he';
 
 const twitchSlang = new Set([
     'pog',
-    'pogchamp',
-    'LULW',
-    'OMEGALUL',
-    'peepo',
-    'peeposad',
-    'kekw',
-    'monkaS',
-    'monkaW',
-    'FeelsBadMan',
-    'FeelsGoodMan',
-    'based',
-    'cringe',
-    'raid',
-    'subathon',
-    'chat',
-    'mods',
-    'copium',
-    'cope',
-    'ratio',
-    'sus',
-    'bro',
-    'giga',
-    'peepoLeave',
-    'sadge',
-    'ayaya',
 ]);
+
+// List of common filler words and stutter fragments
+const fillerWords = [
+    'uh',
+    'um',
+    'er',
+    'ah',
+];
+
+// Regex utility to check for valid end punctuation
+const sentenceEnd = /([.?!])\s+(?=[A-Z])/g;
 
 export function cleanTranscript(text) {
     let result = he.decode(text);
 
-    // Replace redacted underscores with [censored]
-    result = result.replace(/\[?_{2,}\]?/g, '[censored]');
+    // 1. Normalize bracketed noise: [music], [laughter], etc.
+    result = result.replace(/\[.*?\]/gi, '[...]');
 
-    // Collapse repeated [music] tags
-    result = result.replace(/(\[music\]\s*){2,}/gi, '[music] ');
+    // 2. Remove repeated bracketed noise
+    result = result.replace(/(\[\.\.\.\]\s*){2,}/gi, '[...] ');
 
-    // Fix rogue punctuation like .,
-    result = result.replace(/([.?!]),/g, '$1');
+    // 3. Remove HTML tags, malformed unicode, garbage characters
+    result = result
+        .replace(/<[^>]+>/g, '') // tags
+        .replace(/[^\x00-\x7F]+/g, ''); // non-ascii artifacts
 
-    // Remove repeated words unless they're Twitch slang
-    result = result.replace(/\b(\w+)\b(?:\s+\1\b){1,}/gi, (match, word) => {
-        return twitchSlang.has(word.toLowerCase()) ? match : word;
-    });
-
-    // Collapse excessive punctuation (e.g. !!! or ...)
+    // 4. Collapse repeated punctuation (!!! → !)
     result = result.replace(/([!?.,])\1+/g, '$1');
 
-    // Normalize whitespace
+    // 5. Replace stutters (e.g. "th-th-that") unless it's twitch slang
+    result = result.replace(/\b(\w+)-\1\b/g, (match, word) =>
+        twitchSlang.has(word.toLowerCase()) ? match : word
+    );
+
+    // 6. Remove long runs of repeated filler words unless in slang
+    fillerWords.forEach((word) => {
+        const regex = new RegExp(`\\b(${word})(\\s+\\1){1,}\\b`, 'gi');
+        result = result.replace(regex, (match, w) =>
+            twitchSlang.has(w.toLowerCase()) ? match : w
+        );
+    });
+
+    // 7. Collapse multiple whitespace
     result = result.replace(/\s+/g, ' ').trim();
 
-    // Add paragraph breaks between sentence endings and capital letter
-    result = result.replace(/([.?!])\s+(?=[A-Z])/g, '$1\n\n');
+    // 8. Add paragraph breaks intelligently
+    result = result.replace(sentenceEnd, '$1\n\n');
 
-    // Capitalize start of new paragraphs if needed
-    result = result.replace(
-        /(^|\n\n)([a-z])/g,
-        (match, p1, p2) => p1 + p2.toUpperCase()
-    );
+    // 9. Fix punctuation spacing
+    result = result.replace(/([.?!])(?=\w)/g, '$1 '); // missing space after punctuation
+
+    // 10. Preserve intentional caps like ALL CAPS
+    // Optional: normalize random caps if needed:
+    result = result.replace(/\b([A-Z])([a-z]+)\b/g, (_, a, b) => a + b);
 
     return result;
 }
