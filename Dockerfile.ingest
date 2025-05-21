@@ -1,0 +1,8 @@
+FROM node:20
+
+WORKDIR /app
+COPY ingest/package*.json ./ingest/
+RUN cd ingest && npm install
+COPY ingest ./ingest
+
+CMD ["sleep", "infinity"]  # run manually or for cron jobs

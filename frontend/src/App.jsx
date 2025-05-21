@@ -1,5 +1,6 @@
 import { Route, BrowserRouter as Router, Routes } from 'react-router-dom';
-import TranscriptViewer from './components/TranscriptViewer';
+import TranscriptViewer from './pages/TranscriptViewer';
+
 import Home from './pages/Home';
 
 function App() {

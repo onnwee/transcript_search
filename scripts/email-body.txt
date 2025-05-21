@@ -1,0 +1,7 @@
+The transcript batch job failed.
+
+Check logs:
+  journalctl -u transcript-batch.service
+
+Timestamp:
+  $(date)

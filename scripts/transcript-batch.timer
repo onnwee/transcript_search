@@ -1,0 +1,9 @@
+[Unit]
+Description=Run transcript ingest once per day
+
+[Timer]
+OnCalendar=daily
+Persistent=true
+
+[Install]
+WantedBy=timers.target

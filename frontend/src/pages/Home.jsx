@@ -1,9 +1,15 @@
-import algoliasearch from 'algoliasearch/lite';
+import { instantMeiliSearch } from '@meilisearch/instant-meilisearch';
 import { Configure, InstantSearch } from 'react-instantsearch-dom';
 import ResultsList from '../components/ResultsList';
 import SearchInput from '../components/SearchBox';
 
-const searchClient = algoliasearch('http://localhost:7700', 'masterKey'); // Customize if using proxy
+const MEILI_HOST = import.meta.env.MEILISEARCH_HOST || 'http://localhost:7700';
+const MEILI_API_KEY = import.meta.env.MEILISEARCH_API_KEY || 'masterKey';
+
+const { searchClient } = instantMeiliSearch(
+    MEILI_HOST || 'http://localhost:7700',
+    MEILI_API_KEY || 'masterKey'
+);
 
 const Home = () => {
     return (

@@ -35,7 +35,7 @@ export async function getAllVideos(channelId) {
             {
                 params: {
                     part: 'snippet',
-                    maxResults: 50,
+                    maxResults: 10000,
                     pageToken: nextPageToken,
                     playlistId: uploadsPlaylist,
                     key: process.env.YOUTUBE_API_KEY,

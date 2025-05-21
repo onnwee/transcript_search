@@ -42,3 +42,10 @@ DEEPSEEK_API_KEY=
 MEILISEARCH_HOST=http://localhost:7700
 MEILISEARCH_API_KEY=masterKey
 ```
+
+### systemd
+
+```sh
+journalctl -u transcript-batch.service --since "1 hour ago"
+systemctl list-timers
+```

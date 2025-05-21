@@ -3,9 +3,10 @@ import 'dotenv/config';
 import { Pool } from 'pg';
 import { YoutubeTranscript } from 'youtube-transcript';
 import { indexTranscript } from '../meili.js';
-import { logger } from './utils/logger.js';
-import { punctuateSentences } from './utils/punctuate.js';
-import { splitIntoChunks } from './utils/split.js';
+// import cleanTranscript from './clean.js';
+import { logger } from './logger.js';
+import { punctuateSentences } from './punctuate.js';
+import { splitIntoChunks } from './split.js';
 
 logger.info(`🔧 Connecting to DB at: ${process.env.DATABASE_URL}`);
 const pool = new Pool({ connectionString: process.env.DATABASE_URL });
@@ -41,13 +42,13 @@ export async function ingestVideo(video) {
 
         const rawText = segments.map((s) => s.text).join(' ');
         const formatted = await formatTranscript(rawText);
-        const cleaned = cleanTranscript(formatted);
+        // const cleaned = cleanTranscript(formatted);
         await client.query(
             `
         INSERT INTO videos (video_id, video_title, published_at, formatted_transcript)
         VALUES ($1, $2, $3, $4)
       `,
-            [video.video_id, video.title, video.published_at, cleaned]
+            [video.video_id, video.title, video.published_at, formatted]
         );
 
         for (const s of segments) {
@@ -60,7 +61,7 @@ export async function ingestVideo(video) {
             );
         }
         try {
-            await indexTranscript(video.video_id, video.title, cleaned);
+            await indexTranscript(video.video_id, video.title, formatted);
             logger.info(`📨 Indexing to Meilisearch: ${video.video_id}`);
         } catch (err) {
             logger.error(
