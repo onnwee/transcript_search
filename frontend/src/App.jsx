@@ -1,5 +1,6 @@
 import { Route, BrowserRouter as Router, Routes } from 'react-router-dom';
 import TranscriptViewer from './pages/TranscriptViewer';
+import SystemMonitor from './pages/SystemMonitor';
 
 import Home from './pages/Home';
 
@@ -14,6 +15,10 @@ function App() {
                 <Route
                     path='/video/:id'
                     element={<TranscriptViewer />}
+                />
+                <Route
+                    path='/system-monitor'
+                    element={<SystemMonitor />}
                 />
             </Routes>
         </Router>

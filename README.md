@@ -9,7 +9,9 @@ A full-stack application for ingesting, formatting, and searching YouTube video 
 - ✅ **Fetch from YouTube** using `youtube-transcript`
 - 🧐 **No AI Required**: Uses lightweight NLP for punctuation & formatting
 - 🤖 **Still Loads an AI container**: LMAO
+  - ⛔ Commented out for now
 - 🧹 **Cleaner**: Doesn't really work great right now
+  - ⛔ Commented out for now
 - 🔍 **Fast Fuzzy Search** powered by Meilisearch
 - 🚧 **Containerized** with Docker Compose for isolated services
 - ⚖️ **PostgreSQL Storage** of full transcript and segment-level access
@@ -20,14 +22,9 @@ A full-stack application for ingesting, formatting, and searching YouTube video 
 
 ```bash
 git clone https://github.com/yourname/transcript_search.git
-cd transcript_search/ingest
-npm install
-cd ../frontend
-npm install
-cd ..
-docker-compose up --build -dmake
-make schema
-make ingest
+cd transcript_search
+
+
 ```
 
 ### Example .env
