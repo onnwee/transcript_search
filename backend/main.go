@@ -35,6 +35,9 @@ func main() {
 	e.GET("/api/health", func(c echo.Context) error {
 		return c.String(http.StatusOK, "OK")
 	})
+	// Set up Docker status endpoint
+	e.GET("/api/docker", handlers.GetDockerStatus)
+	e.GET("/api/docker-logs", handlers.StreamDockerLogs)
 
 	// Set up API endpoints
 	e.GET("/api/search", handlers.Search)
