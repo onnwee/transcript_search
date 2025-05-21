@@ -28,6 +28,8 @@ export default [
                 'warn',
                 { allowConstantExport: true },
             ],
+            'no-undef': false,
         },
+        node: true,
     },
 ];

@@ -2,6 +2,8 @@ import axios from 'axios';
 import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 
+const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+
 const TranscriptViewer = () => {
     const { id } = useParams();
     const [video, setVideo] = useState(null);
@@ -10,8 +12,14 @@ const TranscriptViewer = () => {
     useEffect(() => {
         async function fetchTranscript() {
             try {
-                const res = await axios.get(`/api/video/${id}`);
+                const res = await axios.get(`${API_BASE}/api/video/${id}`, {
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    withCredentials: false, // set to true if using cookies/auth
+                });
                 setVideo(res.data);
+                console.log(res.data);
             } catch (err) {
                 console.error('Error fetching transcript', err);
             } finally {

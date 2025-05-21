@@ -28,19 +28,6 @@ services:
         volumes:
             - meili_data:/meili_data
 
-    ollama:
-        image: ollama/ollama
-        container_name: ollama
-        restart: unless-stopped
-        environment:
-            OLLAMA_USE_CPU: 'true'
-        ports:
-            - '11434:11434'
-        volumes:
-            - ./ollama:/models
-            - transcript_search_llama_settings:/root/.ollama
-        command: serve
-
     punctuator:
         build:
             context: ./punctuator
@@ -66,11 +53,13 @@ services:
             - PUNCTUATOR_MODEL_URL=http://localhost:8000/health
             - PUNCTUATOR_MODEL_PORT=8000
 
-    backend:
+    backend: # Go API server
         build:
             context: .
             dockerfile: Dockerfile.backend
         container_name: transcript_search-backend
+        ports:
+            - '3000:3000'
         depends_on:
             transcript_pg:
                 condition: service_healthy
@@ -81,13 +70,43 @@ services:
             YOUTUBE_API_KEY: ${YOUTUBE_API_KEY}
             YOUTUBE_CHANNEL_ID: ${YOUTUBE_CHANNEL_ID}
             PUNCTUATOR_URL: 'http://punctuator:8000'
-        command: sleep infinity
         healthcheck:
-            test: ['CMD', 'curl', '-f', 'http://localhost:3000/health']
+            test: ['CMD', 'curl', '-f', 'http://localhost:3000/api/health']
             interval: 10s
             timeout: 5s
             retries: 3
 
+    ingest: # Node tools, stays idle unless called
+        build:
+            context: .
+            dockerfile: Dockerfile.ingest
+        container_name: transcript_search-ingest
+        depends_on:
+            backend:
+                condition: service_healthy
+        environment:
+            DATABASE_URL: ${DATABASE_URL}
+            YOUTUBE_API_KEY: ${YOUTUBE_API_KEY}
+            YOUTUBE_CHANNEL_ID: ${YOUTUBE_CHANNEL_ID}
+            PUNCTUATOR_URL: 'http://punctuator:8000'
+        command: sleep infinity
+        healthcheck:
+            test: ['CMD', 'node', '--version']
+            interval: 30s
+            timeout: 5s
+            retries: 2
+
+    batch: # One-shot ingestion job
+        build:
+            context: .
+            dockerfile: Dockerfile.ingest
+        command: ['node', 'ingest/batch.js']
+        depends_on:
+            ingest:
+                condition: service_healthy
+            meilisearch:
+                condition: service_started
+        restart: 'no'
 volumes:
     pg_data:
     meili_data:

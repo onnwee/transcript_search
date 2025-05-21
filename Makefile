@@ -7,15 +7,14 @@ endif
 
 # 🎯 Full local dev environment
 dev:
-	docker-compose up -d
 	@echo "⏳ Waiting for Postgres..."
 	node scripts/wait-for-postgres.js
 	@echo "✅ Postgres is ready."
 	docker exec -i transcript_pg psql -U postgres -d transcripts < schema.sql
 	@echo "📄 Schema applied."
 	sleep 5
-	docker-compose exec backend node batch.js
 	curl --silent --fail http://localhost:7700/health && echo "✅ Meilisearch is healthy." || (echo "❌ Meilisearch not reachable." && exit 1)
+	docker-compose exec ingest node ingest/batch.js
 
 # 🐳 Start Docker services
 start:
@@ -31,7 +30,11 @@ schema:
 
 # 🌱 Seed recent videos
 ingest:
-	docker-compose exec backend node batch.js
+	docker-compose exec ingest node ingest/batch.js
+
+# 🌱 Seed all videos
+ingest-all:
+	docker-compose exec ingest node ingest/ingest_all.js
 
 # 🧪 Run DB test query
 test-db:
@@ -39,7 +42,7 @@ test-db:
 
 # 💥 Stop and remove containers
 stop:
-	docker-compose down -v
+	docker-compose down
 
 # 🔁 Restart environment
 restart: stop dev

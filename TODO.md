@@ -25,7 +25,7 @@ What’s done, what’s next, and what’s coming soon. Clean. Organized. Focuse
 - [x] `ingest_all.js` — fetch + punctuate + clean + index entire channel
 - [x] `ingest_new.js` — ingest only new videos
 - [x] Dockerized `punctuator` using DeepMultilingualPunctuation
-- [x] Transcript cleaner: collapse tags, preserve Twitch slang
+- [ ] Transcript cleaner
 - [x] Retry handling on transcript fetch
 - [x] Logging for ingest pipeline
 - [x] Meilisearch indexing with fallback logging

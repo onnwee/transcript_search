@@ -1,0 +1,6 @@
+[Unit]
+Description=Email alert when batch ingest fails
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/mail -s "❌ Transcript batch job failed" onnwee@pm.me < /home/YOUR_USER/transcript_search/scripts/email-body.txt

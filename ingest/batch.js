@@ -26,7 +26,7 @@ async function fetchRecentVideos() {
         channelId: YOUTUBE_CHANNEL_ID,
         part: 'snippet,id',
         order: 'date',
-        maxResults: '25',
+        maxResults: '50',
     });
 
     if (process.env.YOUTUBE_PUBLISHED_AFTER) {

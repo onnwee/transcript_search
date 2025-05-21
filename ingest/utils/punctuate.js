@@ -28,6 +28,9 @@ export async function punctuateSentences(segments, retries = 3) {
                     attempt,
                     error: err.message,
                 });
+                setTimeout(() => {
+                    logger.info('Punctuation timeout', { attempt });
+                }, 1000);
             }
         }
 
