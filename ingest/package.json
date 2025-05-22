@@ -13,8 +13,9 @@
     "dependencies": {
         "axios": "^1.9.0",
         "dotenv": "^16.5.0",
-        "node-fetch": "^3.3.2",
-        "p-limit": "^6.2.0",
+        "he": "^1.2.0",
+        "p-map": "^7.0.3",
+        "p-retry": "^6.2.1",
         "pg": "^8.16.0",
         "youtube-transcript": "^1.2.1"
     },

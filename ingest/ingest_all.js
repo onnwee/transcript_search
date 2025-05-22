@@ -1,4 +1,6 @@
 import 'dotenv/config';
+import pMap from 'p-map';
+import pRetry from 'p-retry';
 
 import { ingestVideo } from './utils/ingest.js';
 import { getAllVideos } from './utils/youtube.js';
@@ -14,8 +16,39 @@ export async function run() {
         process.exit(1);
     }
 
+    const concurrency = parseInt(process.env.INGEST_CONCURRENCY || '2', 10);
     const videos = await getAllVideos(channelId);
-    for (const video of videos) {
-        await ingestVideo(video);
-    }
+
+    let completed = 0;
+    console.log(
+        `📺 Found ${videos.length} videos to ingest (concurrency: ${concurrency})`
+    );
+
+    await pMap(
+        videos,
+        async (video) => {
+            try {
+                await pRetry(() => ingestVideo(video), {
+                    retries: 3,
+                    onFailedAttempt: (error) => {
+                        console.warn(
+                            `🔁 Retry ${error.attemptNumber} for ${video.video_id}: ${error.message}`
+                        );
+                    },
+                });
+                completed++;
+                console.log(
+                    `✅ [${completed}/${videos.length}] ${video.video_id}`
+                );
+            } catch (err) {
+                console.error(
+                    `❌ Failed permanently: ${video.video_id}`,
+                    err.message
+                );
+            }
+        },
+        { concurrency }
+    );
+
+    console.log(`🎉 Done. ${completed}/${videos.length} succeeded.`);
 }

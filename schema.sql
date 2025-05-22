@@ -13,11 +13,24 @@ CREATE TABLE IF NOT EXISTS transcript_segments (
     id SERIAL PRIMARY KEY,
     video_id TEXT NOT NULL REFERENCES videos(video_id) ON DELETE CASCADE,
     start_time NUMERIC NOT NULL,
-    text_segment TEXT NOT NULL
+    text_segment TEXT NOT NULL,
+    timestamp TEXT GENERATED ALWAYS AS (
+        CASE
+            WHEN start_time >= 3600 THEN
+                LPAD(FLOOR(start_time / 3600)::TEXT, 1, '0') || ':' ||
+                LPAD(FLOOR((start_time % 3600) / 60)::TEXT, 2, '0') || ':' ||
+                LPAD(FLOOR(start_time % 60)::TEXT, 2, '0')
+            ELSE
+                LPAD(FLOOR(start_time / 60)::TEXT, 1, '0') || ':' ||
+                LPAD(FLOOR(start_time % 60)::TEXT, 2, '0')
+        END
+    ) STORED
 );
 
+-- Indexes
 CREATE UNIQUE INDEX IF NOT EXISTS idx_videos_video_id ON videos(video_id);
 CREATE INDEX IF NOT EXISTS idx_segments_video_id ON transcript_segments(video_id);
+CREATE INDEX IF NOT EXISTS idx_segments_start_time ON transcript_segments(start_time);
 
 
 -- === Visitor Sessions Table ===

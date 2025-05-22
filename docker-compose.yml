@@ -1,12 +1,9 @@
 services:
     transcript_pg:
+        env_file: .env
         image: postgres:15
         container_name: transcript_pg
         restart: unless-stopped
-        environment:
-            POSTGRES_USER: postgres
-            POSTGRES_PASSWORD: postgres
-            POSTGRES_DB: transcripts
         ports:
             - '5432:5432'
         volumes:
@@ -18,21 +15,38 @@ services:
             retries: 10
 
     meilisearch:
+        env_file: .env
         image: getmeili/meilisearch:v1.6
-        container_name: meilisearch
+        container_name: transcript_search-meilisearch
         restart: unless-stopped
-        environment:
-            MEILI_MASTER_KEY: masterKey
         ports:
             - '7700:7700'
         volumes:
             - meili_data:/meili_data
+        healthcheck:
+            test: ['CMD', 'curl', '-f', 'http://localhost:7700/health']
+            interval: 10s
+            timeout: 5s
+            retries: 5
+
+    meili_setup:
+        env_file: .env
+        image: node:20
+        volumes:
+            - .:/app
+        working_dir: /app
+        command: ['node', 'setupMeili.js']
+        depends_on:
+            meilisearch:
+                condition: service_healthy
+        restart: 'no'
 
     punctuator:
+        env_file: .env
         build:
             context: ./punctuator
             dockerfile: Dockerfile
-        container_name: punctuator
+        container_name: transcript_search-punctuator
         ports:
             - '8000:8000'
         restart: unless-stopped
@@ -40,20 +54,15 @@ services:
             test: ['CMD', 'curl', '-f', 'http://localhost:8000/health']
             interval: 10s
             timeout: 5s
-            start_period: 60s
+            start_period: 60s # or even 60s
             retries: 5
         volumes:
             - ./punctuator:/app
+            - ~/.cache/huggingface:/root/.cache/huggingface
         command: python server.py
-        environment:
-            - PUNCTUATOR_MODEL_PATH=/app/punctuator_model
-            - PUNCTUATOR_MODEL_NAME=punctuator_model
-            - PUNCTUATOR_MODEL_TYPE=punctuator
-            - PUNCTUATOR_MODEL_VERSION=latest
-            - PUNCTUATOR_MODEL_URL=http://localhost:8000/health
-            - PUNCTUATOR_MODEL_PORT=8000
 
     backend: # Go API server
+        env_file: .env
         build:
             context: .
             dockerfile: Dockerfile.backend
@@ -67,11 +76,6 @@ services:
                 condition: service_healthy
             punctuator:
                 condition: service_healthy
-        environment:
-            DATABASE_URL: ${DATABASE_URL}
-            YOUTUBE_API_KEY: ${YOUTUBE_API_KEY}
-            YOUTUBE_CHANNEL_ID: ${YOUTUBE_CHANNEL_ID}
-            PUNCTUATOR_URL: 'http://punctuator:8000'
         healthcheck:
             test: ['CMD', 'curl', '-f', 'http://localhost:3000/api/health']
             interval: 10s
@@ -79,6 +83,7 @@ services:
             retries: 3
 
     ingest: # Node tools, stays idle unless called
+        env_file: .env
         build:
             context: .
             dockerfile: Dockerfile.ingest
@@ -86,29 +91,12 @@ services:
         depends_on:
             backend:
                 condition: service_healthy
-        environment:
-            DATABASE_URL: ${DATABASE_URL}
-            YOUTUBE_API_KEY: ${YOUTUBE_API_KEY}
-            YOUTUBE_CHANNEL_ID: ${YOUTUBE_CHANNEL_ID}
-            PUNCTUATOR_URL: 'http://punctuator:8000'
         command: sleep infinity
         healthcheck:
             test: ['CMD', 'node', '--version']
             interval: 30s
             timeout: 5s
             retries: 2
-
-    batch: # One-shot ingestion job
-        build:
-            context: .
-            dockerfile: Dockerfile.ingest
-        command: ['node', 'ingest/batch.js']
-        depends_on:
-            ingest:
-                condition: service_healthy
-            meilisearch:
-                condition: service_started
-        restart: 'no'
 volumes:
     pg_data:
     meili_data:

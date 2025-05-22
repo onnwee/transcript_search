@@ -1,70 +1,56 @@
 # Load environment from .env (for local dev tools)
 ifneq (,$(wildcard .env))
-  -include .env
+  include .env
+  export
 endif
 
-.PHONY: dev start schema ingest test-db stop restart logs meili-health test coverage reset
-
-# 🎯 Full local dev environment
-dev:
-	@echo "⏳ Waiting for Postgres..."
-	node scripts/wait-for-postgres.js
-	@echo "✅ Postgres is ready."
-	docker exec -i transcript_pg psql -U postgres -d transcripts < schema.sql
-	@echo "📄 Schema applied."
-	sleep 5
-	curl --silent --fail http://localhost:7700/health && echo "✅ Meilisearch is healthy." || (echo "❌ Meilisearch not reachable." && exit 1)
-	docker-compose exec ingest node ingest/batch.js
-
-# 🐳 Start Docker services
+# 🐳 Start Docker containers
 start:
 	docker-compose up -d
 	@echo "⏳ Waiting for Postgres..."
 	until docker exec transcript_pg pg_isready -U postgres > /dev/null 2>&1; do sleep 1; done
 	@echo "✅ Postgres is ready."
 
-# 🧱 Apply schema
+# 🧱 Apply DB schema
 schema:
 	docker exec -i transcript_pg psql -U postgres -d transcripts < schema.sql
 	@echo "📄 Schema applied."
 
-# 🌱 Seed recent videos
-ingest:
-	docker-compose exec ingest node ingest/batch.js
+# 🔧 Setup Meilisearch index settings
+meili-setup:
+	docker-compose run --rm meili_setup
 
-# 🌱 Seed all videos
+# 🌱 Ingest recent videos
 ingest-all:
 	docker-compose exec ingest node ingest/ingest_all.js
 
-# 🧪 Run DB test query
+# 🔍 Quick test query
 test-db:
 	docker exec -i transcript_pg psql -U postgres -d transcripts -c "SELECT video_id, video_title FROM videos LIMIT 5;"
 
-# 💥 Stop and remove containers
+# 💥 Stop all containers
 stop:
 	docker-compose down
 
-# 🔁 Restart environment
-restart: stop dev
-
-# 📜 View logs
+# 📜 Logs
 logs:
 	docker-compose logs -f
 
-# 🔎 Check Meilisearch health
+# 🧪 Meilisearch health check
 meili-health:
 	curl --silent --fail http://localhost:7700/health && echo "✅ Meilisearch is healthy." || (echo "❌ Meilisearch not reachable." && exit 1)
 
-# 🧪 Run all ingest tests with coverage
+# 🧪 Ingest service test
 test:
 	cd ingest && npx vitest run
 
-# 🧪 Run tests and open coverage report
+# 📈 Coverage report
 coverage: test
 	@echo "📂 Opening local coverage report..."
 	@xdg-open file://$(shell pwd)/ingest/coverage/index.html 2>/dev/null || \
      open ingest/coverage/index.html || \
      echo "👉 Open manually: ingest/coverage/index.html"
 
+# 🔄 Reset database
 reset:
 	docker exec -i transcript_pg psql -U postgres -d transcripts < reset.sql
