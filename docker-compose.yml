@@ -34,7 +34,7 @@ services:
         image: node:20
         volumes:
             - .:/app
-        working_dir: /app
+        working_dir: /app/ingest/utils
         command: ['node', 'setupMeili.js']
         depends_on:
             meilisearch:
