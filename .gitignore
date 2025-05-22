@@ -80,3 +80,5 @@ Icon?
 
 # ==== MONOREPOS ====
 .pnpm-store/
+
+.venv

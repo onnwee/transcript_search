@@ -2,3 +2,4 @@ flask
 transformers
 torch
 deepmultilingualpunctuation
+huggingface_hub[hf_xet]

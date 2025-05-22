@@ -1,8 +1,13 @@
+import 'dotenv/config';
 import axios from 'axios';
 
 export async function indexTranscript(video_id, title, transcript) {
     const index = 'transcripts';
-
+    console.log(
+        '📡 Indexing URL:',
+        `${process.env.MEILISEARCH_HOST}/indexes/${index}/documents`
+    );
+    console.log('🔑 API Key:', process.env.MEILISEARCH_API_KEY);
     try {
         const res = await axios.post(
             `${process.env.MEILISEARCH_HOST}/indexes/${index}/documents`,

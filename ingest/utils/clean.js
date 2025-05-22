@@ -1,62 +1,42 @@
-// import he from 'he';
+import he from 'he';
 
-// const twitchSlang = new Set([
-//     'pog',
-// ]);
+export function cleanTranscript(text) {
+    if (!text) return '';
 
-// // List of common filler words and stutter fragments
-// const fillerWords = [
-//     'uh',
-//     'um',
-//     'er',
-//     'ah',
-// ];
+    // 1. Decode HTML entities (twice in case of double encoding)
+    text = he.decode(he.decode(text));
 
-// // Regex utility to check for valid end punctuation
-// const sentenceEnd = /([.?!])\s+(?=[A-Z])/g;
+    // 2. Normalize whitespace and remove excessive line breaks
+    text = text
+        .replace(/\r\n|\r|\n/g, ' ') // collapse all newlines into spaces
+        .replace(/\s{2,}/g, ' ') // collapse multiple spaces
+        .trim();
 
-// export function cleanTranscript(text) {
-//     let result = he.decode(text);
+    // 3. Collapse filler words and repeated interjections
+    const repeatedWordRegex = /\b(uh|um|er|ah|like|you know)(\s+\1){1,}/gi;
+    text = text.replace(repeatedWordRegex, '$1');
 
-//     // 1. Normalize bracketed noise: [music], [laughter], etc.
-//     result = result.replace(/\[.*?\]/gi, '[...]');
+    // 4. Remove or replace tags and common noise — but preserve [__]
+    text = text
+        .replace(/\[.*?(music|applause|laugh|laughter|crowd).*?]/gi, '[Noise]')
+        .replace(/\[.*?unintelligible.*?]/gi, '[Unintelligible]')
+        .replace(/\[(\/?)(?!__)[a-zA-Z]+\]/g, '') // remove bracket tags except [__]
+        .replace(/<[^>]+>/g, '') // remove HTML tags
+        .replace(/&nbsp;/g, ' ');
 
-//     // 2. Remove repeated bracketed noise
-//     result = result.replace(/(\[\.\.\.\]\s*){2,}/gi, '[...] ');
+    // 5. Fix repeated punctuation and artifacts
+    text = text
+        .replace(/\.{3,}/g, '...') // normalize ellipses
+        .replace(/([?!]){2,}/g, '$1') // reduce !!! or ??? to single
+        .replace(/--+/g, '-') // normalize dashes
+        .replace(/["“”]+/g, '"') // normalize quotes
+        .replace(/‘|’/g, "'"); // normalize apostrophes
 
-//     // 3. Remove HTML tags, malformed unicode, garbage characters
-//     result = result
-//         .replace(/<[^>]+>/g, '') // tags
-//         .replace(/[^\x00-\x7F]+/g, ''); // non-ascii artifacts
+    // 6. Clean up spacing around punctuation
+    text = text
+        .replace(/\s+([.,?!;:])/g, '$1') // no space before punctuation
+        .replace(/([.,?!;:])(?=\S)/g, '$1 ') // ensure space after punctuation
+        .replace(/\s{2,}/g, ' '); // clean extra spaces again
 
-//     // 4. Collapse repeated punctuation (!!! → !)
-//     result = result.replace(/([!?.,])\1+/g, '$1');
-
-//     // 5. Replace stutters (e.g. "th-th-that") unless it's twitch slang
-//     result = result.replace(/\b(\w+)-\1\b/g, (match, word) =>
-//         twitchSlang.has(word.toLowerCase()) ? match : word
-//     );
-
-//     // 6. Remove long runs of repeated filler words unless in slang
-//     fillerWords.forEach((word) => {
-//         const regex = new RegExp(`\\b(${word})(\\s+\\1){1,}\\b`, 'gi');
-//         result = result.replace(regex, (match, w) =>
-//             twitchSlang.has(w.toLowerCase()) ? match : w
-//         );
-//     });
-
-//     // 7. Collapse multiple whitespace
-//     result = result.replace(/\s+/g, ' ').trim();
-
-//     // 8. Add paragraph breaks intelligently
-//     result = result.replace(sentenceEnd, '$1\n\n');
-
-//     // 9. Fix punctuation spacing
-//     result = result.replace(/([.?!])(?=\w)/g, '$1 '); // missing space after punctuation
-
-//     // 10. Preserve intentional caps like ALL CAPS
-//     // Optional: normalize random caps if needed:
-//     result = result.replace(/\b([A-Z])([a-z]+)\b/g, (_, a, b) => a + b);
-
-//     return result;
-// }
+    return text;
+}
