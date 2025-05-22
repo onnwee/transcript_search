@@ -1,5 +1,6 @@
 import 'dotenv/config';
 import axios from 'axios';
+import { logger } from './logger.js';
 
 export async function indexTranscript(video_id, title, transcript) {
     const index = 'transcripts';
@@ -19,12 +20,12 @@ export async function indexTranscript(video_id, title, transcript) {
                 },
             }
         );
-        console.log(`📨 Meili indexing task queued for ${video_id}`, res.data);
+        logger.info(`📨 Meili indexing task queued for ${video_id}`, res.data);
         return res.data;
     } catch (err) {
-        console.error(`❌ Meili indexing failed for ${video_id}:`, err.message);
+        logger.error(`❌ Meili indexing failed for ${video_id}:`, err.message);
         if (err.response?.data) {
-            console.error('📄 Meili response:', err.response.data);
+            logger.error('📄 Meili response:', err.response.data);
         }
         throw err;
     }

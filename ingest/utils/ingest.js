@@ -26,7 +26,7 @@ export async function ingestVideo(video) {
             [video.video_id]
         );
         if (rows.length > 0) {
-            console.log(`⏩ Skipping ${video.video_id} (already ingested)`);
+            logger.info(`⏩ Skipping ${video.video_id} (already ingested)`);
             return;
         }
 
@@ -34,7 +34,7 @@ export async function ingestVideo(video) {
         try {
             segments = await YoutubeTranscript.fetchTranscript(video.video_id);
         } catch (err) {
-            console.error(
+            logger.error(
                 `❌ Failed to fetch transcript for ${video.video_id}: ${err.message}`
             );
             return;
@@ -72,7 +72,7 @@ export async function ingestVideo(video) {
                 }
             );
         }
-        console.log(`✅ Ingested ${video.title}`);
+        logger.info(`✅ Ingested ${video.title}`);
     } finally {
         client.release();
     }

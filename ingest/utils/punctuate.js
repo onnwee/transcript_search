@@ -1,3 +1,4 @@
+import 'dotenv/config';
 import axios from 'axios';
 import { logger } from './logger.js';
 
@@ -9,7 +10,7 @@ export async function punctuateSentences(segments, retries = 3) {
             ? 'http://punctuator:8000'
             : 'http://localhost:8000');
 
-    console.log('PUNCTUATOR_URL', PUNCTUATOR_URL);
+    logger.info('PUNCTUATOR_URL', PUNCTUATOR_URL);
     for (const text of segments) {
         let success = false;
         let attempt = 0;

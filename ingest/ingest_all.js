@@ -3,6 +3,7 @@ import pMap from 'p-map';
 import pRetry from 'p-retry';
 
 import { ingestVideo } from './utils/ingest.js';
+import { logger } from './utils/logger.js';
 import { getAllVideos } from './utils/youtube.js';
 
 if (import.meta.url === `file://${process.argv[1]}`) {
@@ -12,7 +13,7 @@ if (import.meta.url === `file://${process.argv[1]}`) {
 export async function run() {
     const channelId = process.env.YOUTUBE_CHANNEL_ID;
     if (!channelId) {
-        console.error('❌ Missing YOUTUBE_CHANNEL_ID in .env');
+        logger.error('❌ Missing YOUTUBE_CHANNEL_ID in .env');
         process.exit(1);
     }
 

@@ -81,4 +81,5 @@ Icon?
 # ==== MONOREPOS ====
 .pnpm-store/
 
+# ==== PYTHON ====
 .venv

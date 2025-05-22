@@ -15,6 +15,6 @@ export function splitIntoChunks(text, maxLength = 1000) {
 
     if (current) chunks.push(current.trim());
 
-    logger.info(`Split transcript into ${chunks.length} chunks`);
+    logger.info(`🔪 Split transcript into ${chunks.length} chunks`);
     return chunks;
 }
