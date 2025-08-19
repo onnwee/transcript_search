@@ -1,12 +1,14 @@
-// Orchestrates ingest for a single YouTube video: fetch → punctuate → clean → split → align → DB → Meili
-import { splitIntoSentences, alignSentencesToSegments } from "./sentences.js";
 import "dotenv/config";
+
+// Orchestrates ingest for a single YouTube video: fetch → punctuate → clean → split → align → DB → Meili
+import { alignSentencesToSegments, splitIntoSentences } from "./sentences.js";
+import { indexSentenceDocuments, indexTranscript } from "./meili.js";
 
 import { Pool } from "pg";
 import { YoutubeTranscript } from "youtube-transcript";
 import { cleanTranscript } from "./clean.js";
+import { limitYouTube } from "./rateLimit.js";
 import { logger } from "./logger.js";
-import { indexTranscript, indexSentenceDocuments } from "./meili.js";
 import { punctuateSentences } from "./punctuate.js";
 import { splitIntoChunks } from "./split.js";
 
@@ -46,18 +48,33 @@ export async function ingestVideo(video) {
     );
     if (rows.length > 0) {
       logger.info(`⏩ Skipping ${video.video_id} (already ingested)`);
-      return;
+      return true; // treat as success for tally purposes
     }
 
-    // 1) Fetch raw transcript segments from YouTube
+    // 1) Fetch raw transcript segments from YouTube (rate-limited)
     let segments;
     try {
-      segments = await YoutubeTranscript.fetchTranscript(video.video_id);
+      segments = await limitYouTube(() =>
+        YoutubeTranscript.fetchTranscript(video.video_id)
+      );
     } catch (err) {
+      const msg = String(err?.message || "").toLowerCase();
+      // Non-retriable cases: transcripts disabled/unavailable for the video
+      if (
+        msg.includes("disabled") ||
+        msg.includes("no transcript") ||
+        msg.includes("not available")
+      ) {
+        logger.warn(
+          `⏭️ Transcript unavailable for ${video.video_id}; skipping.`
+        );
+        return false; // explicit skip (not a failure)
+      }
+      // Retriable: rethrow so p-retry can handle (captcha/429, network, etc.)
       logger.error(
         `❌ Failed to fetch transcript for ${video.video_id}: ${err.message}`
       );
-      return;
+      throw err;
     }
 
     // 2) Format: punctuate → clean
@@ -124,6 +141,7 @@ export async function ingestVideo(video) {
       });
     }
     logger.info(`✅ Ingested ${video.title}`);
+    return true;
   } finally {
     client.release();
   }

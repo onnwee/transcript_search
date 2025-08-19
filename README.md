@@ -26,7 +26,15 @@ docker network create web
 
 cp .env.example .env
 
-# Edit .env and set strong MEILISEARCH_API_KEY, update DATABASE_URL if needed
+# Edit .env (a comprehensive .env.example is provided) and set:
+
+# - MEILI_MASTER_KEY (Meilisearch server master key)
+
+# - MEILISEARCH_API_KEY (client key; reuse master in dev is OK)
+
+# - YOUTUBE_CHANNEL_ID and YOUTUBE_API_KEY (for ingest)
+
+# - DATABASE_URL if needed
 
 3. Start services and initialize:
 
@@ -64,6 +72,22 @@ See `.env.example` for a complete template. Key values:
 - MEILI_SEGMENT_INDEX / VITE_MEILI_SEGMENT_INDEX: index for sentence snippets (default `transcript_sentences`)
 - PUNCTUATOR_URL: http://punctuator:8000 (inside compose)
 - VITE_API_URL / VITE_MEILISEARCH_HOST / VITE_MEILISEARCH_API_KEY for frontend dev
+
+Additional ingest tuning envs:
+
+- INGEST_CONCURRENCY: parallel videos to process during backfill (default 2)
+- YT_MIN_DELAY_MS: minimum delay between YouTube transcript fetches in ms (default 500)
+- YT_CAPTCHA_BACKOFF_MS: cooldown when CAPTCHA/429 is detected (default 60000)
+- INGEST_RETRY_MIN_TIMEOUT_MS: base delay for per-video retry backoff (default 2000)
+- INGEST_RETRY_FACTOR: exponential factor for retries (default 2)
+
+### Handling YouTube rate limiting
+
+The ingest includes a global limiter that spaces out transcript fetch requests and pauses when CAPTCHA/429 responses are detected. If you hit throttling:
+
+- Reduce `INGEST_CONCURRENCY` to 1–2 for bulk backfills
+- Increase `YT_MIN_DELAY_MS` (e.g., 1000–2000)
+- Increase retry backoff via `INGEST_RETRY_MIN_TIMEOUT_MS` and `INGEST_RETRY_FACTOR`
 
 ## 🧪 Tests (ingest utils)
 

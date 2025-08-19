@@ -29,3 +29,16 @@
 
 - Use `getRecentVideos` during development.
 - Backoff / rotate keys if the quota is exhausted.
+
+## YouTube CAPTCHA / 429 Too Many Requests
+
+Symptoms:
+
+- Errors like "YouTube is receiving too many requests and is asking for a captcha" or HTTP 429.
+
+Mitigations:
+
+- Lower `INGEST_CONCURRENCY` to 1–2
+- Increase `YT_MIN_DELAY_MS` (try 1000–2000)
+- Increase `INGEST_RETRY_MIN_TIMEOUT_MS` and/or `INGEST_RETRY_FACTOR`
+- Wait and retry later; IP reputation can matter (avoid running many scrapers from the same IP)

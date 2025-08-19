@@ -1,4 +1,5 @@
 import "dotenv/config";
+
 import axios from "axios";
 import { logger } from "./logger.js";
 
@@ -12,7 +13,10 @@ export async function indexTranscript(video_id, title, transcript) {
     "📡 Indexing URL:",
     `${process.env.MEILISEARCH_HOST}/indexes/${index}/documents`
   );
-  console.log("🔑 API Key:", process.env.MEILISEARCH_API_KEY);
+  // Avoid printing full secrets; show a short fingerprint only
+  const k = process.env.MEILISEARCH_API_KEY || "";
+  const masked = k ? `${k.slice(0, 4)}…${k.slice(-3)}` : "<empty>";
+  console.log("🔑 API Key:", masked);
   try {
     const res = await axios.post(
       `${process.env.MEILISEARCH_HOST}/indexes/${index}/documents`,
@@ -40,7 +44,7 @@ export async function indexTranscript(video_id, title, transcript) {
  */
 export async function configureIndex() {
   const index = "transcripts";
-  await axios.post(
+  await axios.patch(
     `${process.env.MEILISEARCH_HOST}/indexes/${index}/settings`,
     {
       searchableAttributes: ["title", "transcript"],
@@ -203,11 +207,11 @@ export async function configureIndex() {
 
 /**
  * Configure the sentence-level index settings.
- * Uses X-Meili-API-Key header for variety; both headers are supported.
+ * Uses Authorization: Bearer header (Meili v1.x recommended).
  */
 export async function configureSegmentIndex() {
   const index = process.env.MEILI_SEGMENT_INDEX || "transcript_sentences";
-  await axios.post(
+  await axios.patch(
     `${process.env.MEILISEARCH_HOST}/indexes/${index}/settings`,
     {
       searchableAttributes: ["text", "title"],
@@ -353,7 +357,7 @@ export async function configureSegmentIndex() {
     },
     {
       headers: {
-        "X-Meili-API-Key": process.env.MEILISEARCH_API_KEY,
+        Authorization: `Bearer ${process.env.MEILISEARCH_API_KEY}`,
         "Content-Type": "application/json",
       },
     }
@@ -371,7 +375,7 @@ export async function indexSentenceDocuments(docs) {
     docs,
     {
       headers: {
-        "X-Meili-API-Key": process.env.MEILISEARCH_API_KEY,
+        Authorization: `Bearer ${process.env.MEILISEARCH_API_KEY}`,
         "Content-Type": "application/json",
       },
     }

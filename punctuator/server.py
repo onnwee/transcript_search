@@ -6,7 +6,14 @@ import os
 app = Flask(__name__)
 model = PunctuationModel()
 
-login(token=os.getenv("HUGGINGFACE_HUB_TOKEN"))
+# Only attempt HF login if a token is provided; avoid interactive prompt in containers
+hf_token = os.getenv("HUGGINGFACE_HUB_TOKEN")
+if hf_token:
+    try:
+        login(token=hf_token)
+    except Exception as e:
+        # Non-fatal: model downloads for public repos should still work without login
+        print(f"Warning: Hugging Face login skipped due to error: {e}")
 
 @app.route("/punctuate", methods=["POST"])
 def punctuate():
