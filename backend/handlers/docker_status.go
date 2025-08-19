@@ -10,6 +10,8 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
+// GetDockerStatus returns a summary of local Docker containers.
+// Requires that the backend container has access to /var/run/docker.sock.
 func GetDockerStatus(c echo.Context) error {
 	cli, err := client.NewClientWithOpts(client.FromEnv)
 	if err != nil {

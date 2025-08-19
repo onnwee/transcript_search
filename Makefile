@@ -24,6 +24,10 @@ meili-setup:
 ingest-all:
 	docker-compose exec ingest node ingest/ingest_all.js
 
+# 🧱 Backfill transcript sentences (optionally pass VIDEO_IDs after --)
+backfill-sentences:
+	docker-compose exec ingest node ingest/backfill_sentences.js
+
 # 🔍 Quick test query
 test-db:
 	docker exec -i transcript_pg psql -U postgres -d transcripts -c "SELECT video_id, video_title FROM videos LIMIT 5;"

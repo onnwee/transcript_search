@@ -8,6 +8,10 @@ CREATE TABLE IF NOT EXISTS videos (
     created_at TIMESTAMP DEFAULT NOW()
 );
 
+-- Add missing column when applying schema to existing DB
+ALTER TABLE videos
+    ADD COLUMN IF NOT EXISTS ingested_at TIMESTAMP DEFAULT NOW();
+
 -- === Transcript Segments Table ===
 CREATE TABLE IF NOT EXISTS transcript_segments (
     id SERIAL PRIMARY KEY,
@@ -31,6 +35,19 @@ CREATE TABLE IF NOT EXISTS transcript_segments (
 CREATE UNIQUE INDEX IF NOT EXISTS idx_videos_video_id ON videos(video_id);
 CREATE INDEX IF NOT EXISTS idx_segments_video_id ON transcript_segments(video_id);
 CREATE INDEX IF NOT EXISTS idx_segments_start_time ON transcript_segments(start_time);
+
+-- === Transcript Sentences Table ===
+CREATE TABLE IF NOT EXISTS transcript_sentences (
+    id SERIAL PRIMARY KEY,
+    video_id TEXT NOT NULL REFERENCES videos(video_id) ON DELETE CASCADE,
+    sentence_index INTEGER NOT NULL,
+    start_time NUMERIC NOT NULL,
+    end_time NUMERIC NOT NULL,
+    cleaned_text TEXT NOT NULL
+);
+
+CREATE UNIQUE INDEX IF NOT EXISTS idx_sentences_vid_idx ON transcript_sentences(video_id, sentence_index);
+CREATE INDEX IF NOT EXISTS idx_sentences_vid_start ON transcript_sentences(video_id, start_time);
 
 
 -- === Visitor Sessions Table ===

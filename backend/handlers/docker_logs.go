@@ -16,6 +16,7 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
+// Upgrader for WebSocket connections; permissive origin check for dev.
 var Upgrader = websocket.Upgrader{
 	CheckOrigin: func(r *http.Request) bool {
 		return true // Allow all origins for dev
@@ -23,6 +24,8 @@ var Upgrader = websocket.Upgrader{
 }
 
 
+// StreamDockerLogs opens a WebSocket that tails logs from all running containers.
+// Each line is prefixed with container name and a timestamp, with basic ANSI color.
 func StreamDockerLogs(c echo.Context) error {
 	var mu sync.Mutex
 	ws, err := Upgrader.Upgrade(c.Response(), c.Request(), nil)

@@ -1,103 +1,113 @@
 services:
-    transcript_pg:
-        env_file: .env
-        image: postgres:15
-        container_name: transcript_pg
-        restart: unless-stopped
-        ports:
-            - '5432:5432'
-        volumes:
-            - pg_data:/var/lib/postgresql/data
-        healthcheck:
-            test: ['CMD', 'pg_isready', '-U', 'postgres']
-            interval: 2s
-            timeout: 2s
-            retries: 10
+  transcript_pg:
+    env_file: .env
+    image: postgres:15
+    container_name: transcript_pg
+    restart: unless-stopped
+    ports:
+      - "5432:5432"
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "postgres"]
+      interval: 2s
+      timeout: 2s
+      retries: 10
 
-    meilisearch:
-        env_file: .env
-        image: getmeili/meilisearch:v1.6
-        container_name: transcript_search-meilisearch
-        restart: unless-stopped
-        ports:
-            - '7700:7700'
-        volumes:
-            - meili_data:/meili_data
-        healthcheck:
-            test: ['CMD', 'curl', '-f', 'http://localhost:7700/health']
-            interval: 10s
-            timeout: 5s
-            retries: 5
+  meilisearch:
+    env_file: .env
+    image: getmeili/meilisearch:v1.6
+    container_name: transcript_search-meilisearch
+    restart: unless-stopped
+    ports:
+      - "7700:7700"
+    volumes:
+      - meili_data:/meili_data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:7700/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - default
+      - web
 
-    meili_setup:
-        env_file: .env
-        image: node:20
-        volumes:
-            - .:/app
-        working_dir: /app/ingest/utils
-        command: ['node', 'setupMeili.js']
-        depends_on:
-            meilisearch:
-                condition: service_healthy
-        restart: 'no'
+  meili_setup:
+    env_file: .env
+    image: node:20
+    volumes:
+      - .:/app
+    working_dir: /app/ingest/utils
+    command: ["node", "setupMeili.js"]
+    depends_on:
+      meilisearch:
+        condition: service_healthy
+    restart: "no"
 
-    punctuator:
-        env_file: .env
-        build:
-            context: ./punctuator
-            dockerfile: Dockerfile
-        container_name: transcript_search-punctuator
-        ports:
-            - '8000:8000'
-        restart: unless-stopped
-        healthcheck:
-            test: ['CMD', 'curl', '-f', 'http://localhost:8000/health']
-            interval: 10s
-            timeout: 5s
-            start_period: 60s # or even 60s
-            retries: 5
-        volumes:
-            - ./punctuator:/app
-            - ~/.cache/huggingface:/root/.cache/huggingface
-        command: python server.py
+  punctuator:
+    env_file: .env
+    build:
+      context: ./punctuator
+      dockerfile: Dockerfile
+    container_name: transcript_search-punctuator
+    ports:
+      - "8000:8000"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 10s
+      timeout: 5s
+      start_period: 60s # or even 60s
+      retries: 5
+    volumes:
+      - ./punctuator:/app
+      - ~/.cache/huggingface:/root/.cache/huggingface
+    command: python server.py
 
-    backend: # Go API server
-        env_file: .env
-        build:
-            context: .
-            dockerfile: Dockerfile.backend
-        container_name: transcript_search-backend
-        volumes:
-            - /var/run/docker.sock:/var/run/docker.sock
-        ports:
-            - '3000:3000'
-        depends_on:
-            transcript_pg:
-                condition: service_healthy
-            punctuator:
-                condition: service_healthy
-        healthcheck:
-            test: ['CMD', 'curl', '-f', 'http://localhost:3000/api/health']
-            interval: 10s
-            timeout: 5s
-            retries: 3
+  backend: # Go API server
+    env_file: .env
+    build:
+      context: .
+      dockerfile: Dockerfile.backend
+    container_name: transcript_search-backend
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    ports:
+      - "3000:3000"
+    depends_on:
+      transcript_pg:
+        condition: service_healthy
+      punctuator:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/api/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    networks:
+      - default
+      - web
 
-    ingest: # Node tools, stays idle unless called
-        env_file: .env
-        build:
-            context: .
-            dockerfile: Dockerfile.ingest
-        container_name: transcript_search-ingest
-        depends_on:
-            backend:
-                condition: service_healthy
-        command: sleep infinity
-        healthcheck:
-            test: ['CMD', 'node', '--version']
-            interval: 30s
-            timeout: 5s
-            retries: 2
+  ingest: # Node tools, stays idle unless called
+    env_file: .env
+    build:
+      context: .
+      dockerfile: Dockerfile.ingest
+    container_name: transcript_search-ingest
+    depends_on:
+      backend:
+        condition: service_healthy
+    command: sleep infinity
+    healthcheck:
+      test: ["CMD", "node", "--version"]
+      interval: 30s
+      timeout: 5s
+      retries: 2
 volumes:
-    pg_data:
-    meili_data:
-    transcript_search_llama_settings:
+  pg_data:
+  meili_data:
+  transcript_search_llama_settings:
+
+networks:
+  web:
+    external: true

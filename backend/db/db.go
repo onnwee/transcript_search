@@ -9,15 +9,16 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-// Define an interface to allow mocking in tests
+// PoolInterface abstracts pgxpool.Pool so handlers can be unit-tested with mocks.
 type PoolInterface interface {
 	QueryRow(ctx context.Context, sql string, args ...any) pgx.Row
+	Query(ctx context.Context, sql string, args ...any) (pgx.Rows, error)
 }
 
-// Global pool variable using the interface
+// Pool is the global connection pool used by handlers.
 var Pool PoolInterface
 
-// InitDB assigns a real *pgxpool.Pool to the interface
+// InitDB assigns a real *pgxpool.Pool (from DATABASE_URL) to Pool.
 func InitDB() {
 	pgxPool, err := pgxpool.New(context.Background(), os.Getenv("DATABASE_URL"))
 	if err != nil {
