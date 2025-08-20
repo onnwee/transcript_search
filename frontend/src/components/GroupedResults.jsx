@@ -1,7 +1,8 @@
 // GroupedResults: groups hits by video and renders multiple snippets, infinite scroll.
 import { useEffect, useMemo, useRef, useState } from "react";
-import { useInfiniteHits } from "react-instantsearch-hooks-web";
+
 import { Link } from "react-router-dom";
+import { useInfiniteHits } from "react-instantsearch";
 
 function secondsToTimestamp(s) {
   const sec = Math.floor(Number(s) || 0);

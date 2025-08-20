@@ -99,6 +99,18 @@ services:
       interval: 30s
       timeout: 5s
       retries: 2
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: transcript_search-frontend
+    restart: unless-stopped
+    depends_on:
+      backend:
+        condition: service_healthy
+    networks:
+      - web
 volumes:
   pg_data:
   meili_data:
